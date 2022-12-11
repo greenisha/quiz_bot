@@ -1,0 +1,51 @@
+version: "3.8"
+services:
+  server:
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    container_name: server
+    build:
+      context: ./server
+    environment:
+      POSTGRES_DB: ${PGDB:-testdb}
+      POSTGRES_USER: ${PGUSER:-pguser}
+      POSTGRES_PASSWORD: ${PGUSER:-pgpass}  
+      POSTGRES_HOST: ${PGHOST:-db}  
+      POSTGRES_PORT: ${PGPORT:-5432}  
+    networks:
+      - mynet
+  rest:
+    depends_on:
+      - db
+    ports:
+      - "8000:8001"
+    container_name: rest-server
+    build:
+      context: ./rest
+    environment:
+      POSTGRES_DB: ${PGDB:-testdb}
+      POSTGRES_USER: ${PGUSER:-pguser}
+      POSTGRES_PASSWORD: ${PGUSER:-pgpass}  
+      POSTGRES_HOST: ${PGHOST:-db}  
+      POSTGRES_PORT: ${PGPORT:-5432}  
+    networks:
+      - mynet
+  db:
+    ports:
+      - "5432:5432"
+    build:
+      context: ./db
+    environment:
+      POSTGRES_DB: ${PGDB:-testdb}
+      POSTGRES_USER: ${PGUSER:-pguser}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-pgpass}
+      POSTGRES_HOST: ${PGHOST:-db}  
+      POSTGRES_PORT: ${PGPORT:-5432}  
+    networks:
+        - mynet
+
+networks:
+  mynet:
+    driver: bridge
