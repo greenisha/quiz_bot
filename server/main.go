@@ -41,8 +41,9 @@ func main() {
 			re := regexp.MustCompile(`/quiz (.+)`)
 
 			// log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-			handler.SendStart(update.Message.Chat.ID, re.FindStringSubmatch(update.Message.Text)[1])
-
+			if len(re.FindStringSubmatch(update.Message.Text)) > 0 {
+				handler.SendStart(update.Message.Chat.ID, re.FindStringSubmatch(update.Message.Text)[1])
+			}
 			// msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
 			// msg.ReplyToMessageID = update.Message.MessageID
 

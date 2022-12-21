@@ -9,11 +9,8 @@ services:
     build:
       context: ./server
     environment:
-      POSTGRES_DB: ${PGDB:-testdb}
-      POSTGRES_USER: ${PGUSER:-pguser}
-      POSTGRES_PASSWORD: ${PGUSER:-pgpass}  
-      POSTGRES_HOST: ${PGHOST:-db}  
-      POSTGRES_PORT: ${PGPORT:-5432}  
+      RESTAPI: ${RESTAPI}
+      API_KEY: ${API_KEY}
     networks:
       - mynet
   rest:
