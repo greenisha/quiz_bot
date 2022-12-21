@@ -174,3 +174,11 @@ func UpdateResponseQuestion(context *gin.Context) {
 	}
 	context.JSON(http.StatusOK, curQuestion)
 }
+func AddQuiz(context *gin.Context) {
+	var input request.CreateQuizRequest
+	if err := context.ShouldBindJSON(&input); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	context.JSON(http.StatusOK, input)
+}

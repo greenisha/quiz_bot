@@ -45,6 +45,13 @@ services:
       POSTGRES_PORT: ${PGPORT:-5432}  
     networks:
         - mynet
+  front:
+    ports:
+      - "80:80"
+    build:
+      context: ./front 
+    networks:
+        - mynet
 
 networks:
   mynet:

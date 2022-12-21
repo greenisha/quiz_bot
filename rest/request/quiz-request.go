@@ -27,3 +27,21 @@ type ResponseButton struct {
 	QuizResultQuestionID uint
 	AnswerID             uint
 }
+type CreateQuizResponse struct {
+	name string
+}
+
+type RequestQuizQuestion struct {
+	Question string
+	Timer    int
+	Answer   []RequestQuizAnswer
+}
+
+type RequestQuizAnswer struct {
+	Answer    string
+	IsCorrect bool
+}
+
+type CreateQuizRequest struct {
+	Questions []RequestQuizQuestion
+}

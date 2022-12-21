@@ -1,0 +1,40 @@
+* {
+  box-sizing: border-box
+}
+body{
+  background-color: var(--tg-theme-bg-color, #ffffff);
+  color: var(--tg-theme-text-color, #222222);
+}
+.question-container{
+  background-color: var(--tg-theme-secondary-bg-color,#DDD);
+  padding: 1rem;
+  margin: 1rem;
+  width: 80vw;
+  display: inline-flex;
+  flex-direction: column;
+}
+.question-label{
+  flex-grow: 1;
+  width: 100%;
+}
+.question {
+  width: 100%;
+}
+.remove{
+  font-size: 3rem;
+  color: red;
+}
+.add{
+  font-size: 3rem;
+  color: green;
+}
+.question-label{
+  font-size: 3rem;
+}
+.answer-container label{
+  font-size: 3rem;
+}
+.send {
+  font-size: 3rem;
+  color: green;
+}
