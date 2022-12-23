@@ -2,13 +2,14 @@ package model
 
 import (
 	"html"
+	"math/rand"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"greenisha.ru/quiz/rest/database"
 )
-
 
 //	func (quiz *Quiz) Save() (*Quiz, error) {
 //		err := database.Database.Create(quiz).Error
@@ -39,4 +40,25 @@ func GetQuizByID(ID int) (Quiz, error) {
 	}
 	return quiz, nil
 
+}
+
+var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+func GenerateName() string {
+	rand.Seed(time.Now().UnixNano())
+	for {
+		name := randSeq(5)
+		quiz, _ := FindQuizByName(name)
+		if quiz.ID == 0 {
+			return name
+		}
+	}
 }

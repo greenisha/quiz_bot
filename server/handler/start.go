@@ -2,30 +2,44 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/PaulSonOfLars/gotgbot/v2"
+	"github.com/PaulSonOfLars/gotgbot/v2/ext"
 	"greenisha.ru/quiz-server/client"
 	"greenisha.ru/quiz-server/model"
 	"greenisha.ru/quiz-server/request"
 )
 
-type Handler struct {
-	Tgbotapi *tgbotapi.BotAPI
-	Rest     client.Client
+func NewHandler(b *gotgbot.Bot, ctx *ext.Context) Handler {
+	return Handler{Bot: b, Context: ctx, Rest: client.Client{RestEndpoint: os.Getenv("RESTAPI")}}
 }
 
-func (h Handler) SendStart(chatID int64, input string) {
+type Handler struct {
+	//Tgbotapi *tgbotapi.BotAPI
+	Rest    client.Client
+	Bot     *gotgbot.Bot
+	Context *ext.Context
+}
 
+func (h Handler) SendStart(name string) error {
+
+	//chatID int64, input string
+	chatID := h.Context.EffectiveChat.Id
+	input := name
+
+	log.Println(input)
 	quiz, err := h.Rest.GetQuizByName(input)
 
 	if err != nil {
 		log.Println(err.Error())
-		return
+		return fmt.Errorf("failed to send start message: %w", err)
 	}
 	if quiz.ID == 0 {
-		return
+		return fmt.Errorf("failed to send start message: %w", err)
 	}
 	log.Println(input, quiz)
 
@@ -34,6 +48,14 @@ func (h Handler) SendStart(chatID int64, input string) {
 		log.Println(err.Error())
 	}
 	h.sendNextQuestion(result.ID, 0)
+	return nil
+}
+func (h Handler) SendHelp() error {
+	_, err := h.Context.EffectiveMessage.Reply(h.Bot, "Bot for making and sending quizes to chats and so on", &gotgbot.SendMessageOpts{ParseMode: "html"})
+	if err != nil {
+		return fmt.Errorf("failed to send start message: %w", err)
+	}
+	return nil
 }
 
 func (h Handler) sendNextQuestion(resultId uint, position int) {
@@ -52,35 +74,43 @@ func (h Handler) sendNextQuestion(resultId uint, position int) {
 		log.Println(err.Error())
 	}
 
-	msg := tgbotapi.NewMessage(quizResult.ChatId, quiz.Question[position].Question)
-	msg.ReplyMarkup = constructAnswers(quiz.Question[position], resultQuestion.ID)
-	outMessage, err := h.Tgbotapi.Send(msg)
+	msg, err := h.Context.EffectiveMessage.Reply(h.Bot, quiz.Question[position].Question,
+		&gotgbot.SendMessageOpts{
+			ParseMode:   "html",
+			ReplyMarkup: constructAnswers(quiz.Question[position], resultQuestion.ID),
+		})
+
 	if err != nil {
 		log.Println(err.Error())
 	}
-	h.Rest.PostUpdateResultQuestion(resultQuestion.ID, int64(outMessage.MessageID))
+	h.Rest.PostUpdateResultQuestion(resultQuestion.ID, int64(msg.MessageId))
 	if len(quiz.Question) > position+1 {
 		time.AfterFunc(5*time.Second, func() { h.sendNextQuestion(resultId, position+1) })
 	}
 	time.AfterFunc(10*time.Second, func() { h.HandleFinish(resultId) })
 }
-func constructAnswers(question model.Quiz_question, resultQuestionId uint) *tgbotapi.InlineKeyboardMarkup {
-	var buttons []tgbotapi.InlineKeyboardButton
-
+func constructAnswers(question model.Quiz_question, resultQuestionId uint) gotgbot.InlineKeyboardMarkup {
+	var buttons [][]gotgbot.InlineKeyboardButton
+	rowCount := 0
+	var buttonsRow []gotgbot.InlineKeyboardButton
 	for _, value := range question.Answer {
+		rowCount++
 		answerData := request.ResponseButton{QuizResultQuestionID: resultQuestionId, AnswerID: value.ID}
 		jsonData, err := json.Marshal(answerData)
 		if err != nil {
 			log.Println(err.Error())
 		}
-		button := tgbotapi.NewInlineKeyboardButtonData(value.Answer, string(jsonData))
-		buttons = append(buttons, button)
+		button := gotgbot.InlineKeyboardButton{Text: value.Answer, CallbackData: string(jsonData)}
+		buttonsRow = append(buttonsRow, button)
+		if rowCount >= 2 {
+			buttons = append(buttons, buttonsRow)
+			buttonsRow = nil
+		}
 	}
-	var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
-			buttons...,
-		),
-	)
-	return &numericKeyboard
+	if buttonsRow != nil {
+		buttons = append(buttons, buttonsRow)
+	}
+	var numericKeyboard = gotgbot.InlineKeyboardMarkup{InlineKeyboard: buttons}
+	return numericKeyboard
 
 }

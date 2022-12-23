@@ -93,7 +93,7 @@ func (c *Client) PostAddQuestion(Quiz_resultID uint, QuestionID int64) (model.Qu
 }
 
 func (c *Client) PostUpdateResultQuestion(QuizResultQuestionID uint, MessageId int64) (model.Quiz_result_question, error) {
-	request := request.UpdateResponseQuestion{QuizResultQuestionID, MessageId}
+	request := request.UpdateResponseQuestion{QuizResultQuestionID: QuizResultQuestionID, MessageId: MessageId}
 	var out model.Quiz_result_question
 	err := postJson(c.RestEndpoint+"updateResponseQuestion", &out, request)
 	if err != nil {
@@ -102,13 +102,13 @@ func (c *Client) PostUpdateResultQuestion(QuizResultQuestionID uint, MessageId i
 	return out, nil
 }
 
-func (c *Client) PostAddAnswer(Quiz_result_questionID uint, AnswerID uint, UserID int64, UserName string) (model.Quiz_result_answer, error) {
+func (c *Client) PostAddAnswer(Quiz_result_questionID uint, AnswerID uint, UserID int64, UserName string) error {
 	request := request.AddAnswer{QuizResultQuestionID: Quiz_result_questionID, AnswerID: AnswerID, UserID: UserID, UserName: UserName}
 	var out model.Quiz_result_answer
 	err := postJson(c.RestEndpoint+"addAnswer", &out, request)
 	if err != nil {
 		log.Println(err)
-		return model.Quiz_result_answer{}, err
+		return err
 	}
-	return out, nil
+	return nil
 }

@@ -13,7 +13,7 @@ function Answer({Answer,IsCorrect,removeAnswer,changeAnswer,changeIsCorrect,ques
         </label>
           <label className='is_correct'>
               ✅
-              <input className='input' Checked={IsCorrect} onChange={handleIsCorrectChange} type='checkbox'></input>
+              <input className='input' checked={IsCorrect} onChange={handleIsCorrectChange} type='checkbox'></input>
             </label>
             <div className='remove' onClick={removeAnswer}>-</div>
       </div>

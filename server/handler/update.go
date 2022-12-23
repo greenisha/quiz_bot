@@ -1,29 +1,45 @@
 package handler
 
 import (
+	"encoding/json"
 	"log"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/PaulSonOfLars/gotgbot/v2"
 	"greenisha.ru/quiz-server/model"
+	"greenisha.ru/quiz-server/request"
 )
 
-func (h Handler) HandleUpdate(QuizResultQuestionID uint, Quiz_answerID uint, user *tgbotapi.User, MessageId int64, ChatId int64) {
+func userString(u gotgbot.User) string {
+	if len(u.Username) > 0 {
+		return u.Username
+	} else {
+		return u.FirstName + " " + u.LastName
+	}
+}
 
-	_, err := h.Rest.PostAddAnswer(QuizResultQuestionID, Quiz_answerID, user.ID, user.String())
+func (h Handler) HandleUpdate() error {
+	//QuizResultQuestionID uint, Quiz_answerID uint, user *tgbotapi.User, MessageId int64, ChatId int64
+	var inputData request.ResponseButton
+	err := json.Unmarshal([]byte(h.Context.CallbackQuery.Data), &inputData)
+	if err != nil {
+		log.Println(h.Context.CallbackQuery.Data)
+		panic(err)
+	}
+	err = h.Rest.PostAddAnswer(inputData.QuizResultQuestionID, inputData.AnswerID, h.Context.EffectiveUser.Id, userString(*h.Context.EffectiveUser))
 	if err != nil {
 		log.Println(err.Error())
 	}
-	QuizResultQuestion, err := h.Rest.GetQuizResultQuestion(QuizResultQuestionID)
+	QuizResultQuestion, err := h.Rest.GetQuizResultQuestion(inputData.QuizResultQuestionID)
 	if err != nil {
 		log.Println(err.Error())
 	}
 	question := h.ConstructQuestionText(QuizResultQuestion, false)
 	log.Println(question)
-	msg := tgbotapi.NewEditMessageText(int64(ChatId), int(MessageId), question)
-	msg.ReplyMarkup = constructAnswers(QuizResultQuestion.Quiz_question, QuizResultQuestionID)
-	log.Println("message:", QuizResultQuestion)
-	h.Tgbotapi.Send(msg)
+	_, _, err = h.Context.EffectiveMessage.EditText(h.Bot, question, &gotgbot.EditMessageTextOpts{
+		ReplyMarkup: constructAnswers(QuizResultQuestion.Quiz_question, inputData.QuizResultQuestionID),
+	})
+	return err
 
 }
 func (h Handler) ConstructQuestionText(QuizResultQuestion model.Quiz_result_question, isFinished bool) string {
@@ -46,19 +62,25 @@ func (h Handler) ConstructQuestionText(QuizResultQuestion model.Quiz_result_ques
 	return sb.String()
 }
 
-func (h Handler) HandleFinish(resultId uint) {
+func (h Handler) HandleFinish(resultId uint) error {
 	result, err := h.Rest.GetQuizResult(int(resultId))
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 	for _, v := range result.Quiz_result_question {
 		resultQuestion, err := h.Rest.GetQuizResultQuestion(v.ID)
 		if err != nil {
-			log.Println(err.Error())
+			return err
 		}
 		question := h.ConstructQuestionText(resultQuestion, true)
 		log.Println(question)
-		msg := tgbotapi.NewEditMessageText(result.ChatId, int(resultQuestion.MessageId), question)
-		h.Tgbotapi.Send(msg)
+		_, _, err = h.Bot.EditMessageText(question, &gotgbot.EditMessageTextOpts{
+			ChatId:    result.ChatId,
+			MessageId: int64(resultQuestion.MessageId),
+		})
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

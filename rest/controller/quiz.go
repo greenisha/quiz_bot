@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 
@@ -176,9 +177,30 @@ func UpdateResponseQuestion(context *gin.Context) {
 }
 func AddQuiz(context *gin.Context) {
 	var input request.CreateQuizRequest
+
 	if err := context.ShouldBindJSON(&input); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	context.JSON(http.StatusOK, input)
+	var quiz model.Quiz
+	quiz.Name = model.GenerateName()
+	database.Database.Create(&quiz)
+	for _, rqq := range input.Questions {
+		var question model.Quiz_question
+		question.Question = rqq.Question
+		question.QuizID = quiz.ID
+		database.Database.Create(&question)
+		for _, q := range rqq.Answers {
+			var answer model.Quiz_answer
+			answer.Answer = q.Answer
+			answer.IsCorrect = q.IsCorrect
+			answer.Quiz_questionID = question.ID
+			answer.QuizID = quiz.ID
+			err := database.Database.Create(&answer).Error
+			if err != nil {
+				log.Println(err.Error())
+			}
+		}
+	}
+	context.JSON(http.StatusOK, request.CreateQuizResponse{Name: quiz.Name})
 }

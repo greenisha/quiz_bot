@@ -6,6 +6,7 @@ services:
     ports:
       - "8080:8080"
     container_name: server
+    image: greenisha/quiz_bot:server
     build:
       context: ./server
     environment:
@@ -19,6 +20,7 @@ services:
     ports:
       - "8000:8001"
     container_name: rest-server
+    image: greenisha/quiz_bot:rest
     build:
       context: ./rest
     environment:
@@ -34,6 +36,7 @@ services:
       - "5432:5432"
     build:
       context: ./db
+    image: greenisha/quiz_bot:db
     environment:
       POSTGRES_DB: ${PGDB:-testdb}
       POSTGRES_USER: ${PGUSER:-pguser}
@@ -46,7 +49,8 @@ services:
     ports:
       - "80:80"
     build:
-      context: ./front 
+      context: ./front
+    image: greenisha/quiz_bot:front
     networks:
         - mynet
 

@@ -57,7 +57,7 @@ function Quiz() {
     }
     const sendQuestion =(_) =>{
       console.log(Questions);
-      fetch('/api/addQuiz',{
+      fetch('http://localhost:8001/addQuiz',{
         method:'POST',
         headers: {
           'Content-Type': 'application/json',

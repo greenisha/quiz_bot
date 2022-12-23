@@ -3,7 +3,7 @@ module greenisha.ru/quiz-server
 go 1.19
 
 require (
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/PaulSonOfLars/gotgbot/v2 v2.0.0-rc.12
 	github.com/joho/godotenv v1.4.0
 	gorm.io/gorm v1.24.2
 )

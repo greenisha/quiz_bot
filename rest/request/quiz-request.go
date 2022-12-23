@@ -28,13 +28,13 @@ type ResponseButton struct {
 	AnswerID             uint
 }
 type CreateQuizResponse struct {
-	name string
+	Name string
 }
 
 type RequestQuizQuestion struct {
 	Question string
 	Timer    int
-	Answer   []RequestQuizAnswer
+	Answers  []RequestQuizAnswer
 }
 
 type RequestQuizAnswer struct {
